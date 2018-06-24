@@ -6,13 +6,8 @@ import 'react-select/dist/react-select.css';
 import './EntityForm.css';
 
 const REQUIRED_FIELDS = [
-  "name", "description"
+  "name", "description", "id"
 ];
-const OTHER_FIELDS = [
-  "destination_id"
-]
-
-const ENTITY_FIELDS = REQUIRED_FIELDS.concat(OTHER_FIELDS);
 
 class EntityForm extends Component {
 
@@ -25,7 +20,6 @@ class EntityForm extends Component {
     return (selectedValue) => {
       const currentState = this.state;
       this.setState( {
-        ...currentState,
         entity: {
           ...currentState.entity,
           [fieldname]: selectedValue.value
@@ -38,7 +32,6 @@ class EntityForm extends Component {
     const currentState = this.state;
     const newName = ev.target.value || '';
     this.setState( {
-      ...currentState,
       entity: {
         ...currentState.entity,
         id: newName.replace(/[^\w\d]+/gi, "-").toLowerCase(),
@@ -50,7 +43,6 @@ class EntityForm extends Component {
   handleChange = (ev) => {
     const currentState = this.state;
     this.setState( {
-      ...currentState,
       entity: {
         ...currentState.entity,
         [ev.target.name]: ev.target.value.toString().trim()
@@ -60,6 +52,18 @@ class EntityForm extends Component {
 
   handleAdd = (ev) => {
     this.props.add(this.state.entity)
+  };
+
+  handleClear = (ev) => {
+
+    const emptyEntity = {
+      id: "",
+      name: "",
+      location: "",
+      destination_id: "",
+      description: "",
+    };
+    this.setState({entity: emptyEntity});
   };
 
   valid = () => pipe(map(f => prop(f, this.state.entity)), all(identity))(REQUIRED_FIELDS)
@@ -78,6 +82,7 @@ class EntityForm extends Component {
           <label className="form-label" >Entity Name</label>
           <input
             className="form-input"
+            value={entity.name}
             onChange={this.handleChangeName}
             type="text"
             name="name"/>
@@ -95,6 +100,7 @@ class EntityForm extends Component {
           <label className="form-label" >Description</label>
           <textarea
             className="form-input"
+            value={entity.description}
             onChange={this.handleChange}
             name="description"/>
         </div>
@@ -118,8 +124,10 @@ class EntityForm extends Component {
             onChange={this.handleChangeDropdown("destination_id")}
           />
         </div>
-
-        <button disabled={!this.valid()} onClick={this.handleAdd}>Add</button>
+        <div className="form-actions">
+          <button disabled={!this.valid()} onClick={this.handleAdd}>Add</button>
+          <button onClick={this.handleClear}>Clear Form</button>
+        </div>
       </div>
     );
   }
