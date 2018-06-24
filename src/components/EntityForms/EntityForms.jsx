@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { find, map, merge, omit, append} from "ramda";
+import { find, map, merge, omit, append, pick, prop, uniq, identity, compact, filter, pipe} from "ramda";
 
 import EntityForm from "../EntityForm/EntityForm";
 import "./EntityForms.css";
@@ -12,6 +12,24 @@ class EntityForms extends Component {
       entities: []
     }
   }
+
+  remapEntity = (entity) => {
+    return {
+      id: entity.id,
+      name: entity.name,
+      behaviors: [],
+      proto: null,
+      props: omit(["name", "id"], entity)
+    };
+  };
+
+  currentGameState = () => {
+    const { entities } = this.state;
+    const formattedEntities = map( this.remapEntity, entities);
+    return {
+      entities: formattedEntities
+    };
+  };
 
   addEntity = (entity) => {
     const currentState = this.state;
@@ -28,25 +46,29 @@ class EntityForms extends Component {
     });
   }
 
-  renderExistingEntities = () => {
-    const { entities } = this.state;
-    const formattedEntities = map( (entity) => {
-      return {
-        [entity.name]: {
-          id: entity.name,
-          behaviors: [],
-          props: omit(["name", "id"], entity)
-        }
-      };
-    }, entities);
-    const gameState = {
-      entities: formattedEntities
-    };
+  reset = (_ev) => {
+    const currentState = this.state;
 
-    return JSON.stringify(gameState, null, 2);
+    this.setState({
+      ...currentState,
+      entities: []
+    });
+  };
+
+  renderExistingEntities = () => {
+    return JSON.stringify(this.currentGameState(), null, 2);
   };
 
   render() {
+    const { entities } = this.state;
+    console.log(entities);
+    const availableEntities =
+      pipe(
+        map(prop('name')),
+        uniq,
+        filter(identity)
+      )(entities)
+    console.log('e', availableEntities);
     return (
       <div className="EntityForms">
         <section className="EntityForms-current">
@@ -57,7 +79,11 @@ class EntityForms extends Component {
           </pre>
         </section>
         <aside className="EntityForms-addNew">
-          <EntityForm add={this.addEntity} />
+          <EntityForm
+            add={this.addEntity}
+            availableEntities={ availableEntities }
+          />
+          <button onClick={this.reset}>Reset</button>
         </aside>
       </div>
     );
